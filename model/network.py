@@ -5,25 +5,25 @@ import os
 import tensorflow as tf
 
 from model.util import Util
+from model.model_config import ModelConfig
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 class Network(object):
-
   def __init__(self, data, tensorboard_dir):
     super(Network, self).__init__()
 
     self.tensorboard_dir = tensorboard_dir
 
-    self.max_learning_rate = 0.00008
-    self.min_learning_rate = 0.00005
+    self.max_learning_rate = 0.00001
+    self.min_learning_rate = 0.000002
     self.decay_speed = 10.0
     self.l2_regularizer_beta = 0.0150
 
-    self.n_input_steps = 15   # max input time steps
-    self.n_hidden = 256
-    self.n_classes = 8
-    self.n_embedding = 300
+    self.n_input_steps = ModelConfig.n_input_steps   # max input time steps
+    self.n_hidden = ModelConfig.n_hidden
+    self.n_classes = ModelConfig.n_classes
+    self.n_embedding = ModelConfig.n_embedding
 
     self.data = data
     self.sess = tf.Session()
@@ -62,14 +62,16 @@ class Network(object):
     self.learning_rate = tf.placeholder(tf.float32)
 
     # ================ Params ================
-    self.params['W_fc1'] = tf.Variable(tf.random_normal([self.n_hidden, self.n_classes]))
+    self.params['W_fc1'] = tf.Variable(tf.random_normal([self.n_hidden * 2, self.n_classes]))
     self.params['b_fc1'] = tf.Variable(tf.random_normal([self.n_classes]))
 
     # ================ Graph ================
     with tf.name_scope('network'):
-      self.rnn_cell = tf.nn.rnn_cell.MultiRNNCell([
+      self.rnn_cell_fw = tf.nn.rnn_cell.MultiRNNCell([
         tf.nn.rnn_cell.BasicLSTMCell(self.n_hidden), tf.nn.rnn_cell.BasicLSTMCell(self.n_hidden)])
-      self.outputs, self.states = tf.nn.static_rnn(self.rnn_cell, self.x_split, dtype=tf.float32)
+      self.rnn_cell_bw = tf.nn.rnn_cell.MultiRNNCell([
+        tf.nn.rnn_cell.BasicLSTMCell(self.n_hidden), tf.nn.rnn_cell.BasicLSTMCell(self.n_hidden)])
+      self.outputs, self.states_fw, self.states_bw = tf.nn.static_bidirectional_rnn(self.rnn_cell_fw, self.rnn_cell_bw, self.x_split, dtype=tf.float32)
       self.output_dropped = tf.nn.dropout(self.outputs[-1], self.prob_keep_fc1)
       self.y_pred = tf.matmul(self.output_dropped, self.params['W_fc1']) + self.params['b_fc1']
       self.y_pred_softmax = tf.nn.softmax(self.y_pred)
@@ -100,7 +102,7 @@ class Network(object):
 
   def train(self):
     per_batch = 32
-    epochs = 50
+    epochs = 100
     eval_per_n_batches = int(self.data.num_train_data_entries() / per_batch)
 
     avg_cost, avg_accu = 0, 0

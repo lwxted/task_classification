@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+
+from model.model_config import ModelConfig
 from scipy.misc import imresize
 
 class Data(object):
@@ -23,8 +25,9 @@ class Data(object):
     self.x = full[..., :-1]
     raw_y = full[..., -1].tolist()
     self.y = []
+    from model.network import Network
     for i in range(len(raw_y)):
-      self.y.append([1.0 if raw_y[i] - 1 == j else 0.0 for j in range(8)])
+      self.y.append([1.0 if raw_y[i] == j else 0.0 for j in range(ModelConfig.n_classes)])
     self.y = np.asarray(self.y, dtype=np.float32)
 
     self.train_upto = int(full.shape[0] * 6 / 10)
