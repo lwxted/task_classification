@@ -15,7 +15,7 @@ import sys
 
 base_path = os.path.dirname(os.path.realpath(__file__))
 model = Network(None, os.path.join(base_path, 'log.nosync/network_demo/run1'))
-model.load_model(os.path.join(base_path, 'model.nosync/lstm_early_stopping_without_conc'))
+model.load_model(os.path.join(base_path, 'model_checkpoint/lstm_early_stopping_without_conc'))
 
 path = os.path.join(base_path, 'word2vec_model/wiki.zh.nosync/wiki.zh.vec')
 embedding = Embedding()

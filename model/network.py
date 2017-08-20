@@ -143,7 +143,7 @@ class Network(object):
         if val_avg_cost < lowest_val_avg_cost:
           lowest_val_avg_cost = val_avg_cost
           non_improving_count = 0
-          self.saver.save(self.sess, os.path.join(dir_path, '../model.nosync/lstm_early_stopping_without_conc'))
+          self.saver.save(self.sess, os.path.join(dir_path, '../model_checkpoint/lstm_early_stopping_without_conc'))
         else:
           non_improving_count += 1
           print('No improvement for past %d epochs' % non_improving_count)
